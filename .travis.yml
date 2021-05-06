@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hsuweibo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true hsuweibo/react-test npm test
+
+after_success:
+  - docker build -t hsuweibo/multi-client ./client
+  - docker build -t hsuweibo/multi-nginx ./nginx
+  - docker build -t hsuweibo/multi-server ./server
+  - docker build -t hsuweibo/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those iamges and push to docker hub
+  - docker push hsuweibo/multi-client 
+  - docker push hsuweibo/multi-nginx 
+  - docker push hsuweibo/multi-server
+  - docker push hsuweibo/multi-worker
